@@ -13,6 +13,7 @@
 #define SHOOTERPIXY_H
 #include "Commands/Subsystem.h"
 #include "WPILib.h"
+#include "../Pixy.h"
 
 /**
  *
