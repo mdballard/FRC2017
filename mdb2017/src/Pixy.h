@@ -11,6 +11,7 @@
 #include "WPILIB.h"
 #include "I2C.h"
 #include "SensorBase.h"
+#include <vector>
 
 
 // Communication/misc parameters
@@ -38,6 +39,46 @@
 #define PIXY_I2C_DEFAULT_ADDR     0x54
 #define PIXY_I2C_DEFAULT_PORT     I2C::Port::kOnboard
 
+/*
+ * I2C Object Block
+ * Bytes    16-bit word    Description
+----------------------------------------------------------------
+	0, 1     y              sync: 0xaa55=normal object, 0xaa56=color code object
+	2, 3     y              checksum (sum of all 16-bit words 2-6, that is, bytes 4-13)
+	4, 5     y              signature number
+	6, 7     y              x center of object
+	8, 9     y              y center of object
+	10, 11   y              width of object
+	12, 13   y              height of object
+ */
+
+/*
+ * I2C Servo Control
+ * Bytes    16-bit word   Description
+----------------------------------------------------------------
+	0, 1     y             servo sync (0xff00)
+	2, 3     y             servo 0 (pan) position, between 0 and 1000
+	4, 5     y             servo 1 (tilt) position, between 0 and 1000
+ */
+
+/*
+ * I2C Camera Brightness
+ * Bytes    16-bit word   Description
+----------------------------------------------------------------
+	0, 1     y             camera brightness sync (0xfe00)
+	2        n             brightness value
+ */
+
+/*
+ * I2C LED Control
+ * Bytes    16-bit word   Description
+----------------------------------------------------------------
+	0, 1     y             LED sync (0xfd00)
+	2        n             red value
+	3        n             green value
+	4        n             blue value
+ */
+
 enum BlockType
 {
   NORMAL_BLOCK,
@@ -53,6 +94,13 @@ struct Block
   uint16_t width;
   uint16_t height;
   uint16_t angle;
+  float    aspectRatio;
+  uint16_t x_top;
+  uint16_t x_bottom;
+  uint16_t y_left;
+  uint16_t y_right;
+  uint16_t x_deviation;
+  uint16_t y_deviation;
   void print();
 };
 
@@ -67,7 +115,7 @@ public:
 	int8_t    SetServos(uint16_t s0, uint16_t s1);
 	int8_t    SetBrightness(uint8_t brightness);
 	int8_t    SetLED(uint8_t r, uint8_t g, uint8_t b);
-	Block     *blocks;
+	std::vector<Block> signatures;
 
 private:
 	bool      GetStart();
@@ -80,7 +128,6 @@ private:
 	bool      skipStart;
 	BlockType blockType;
 	uint16_t  blockCount;
-	uint16_t  blockArraySize;
 
 	I2C::Port _port;
 	uint8_t   _address;
